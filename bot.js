@@ -160,6 +160,7 @@ app.get('/question/:id', (req, res) => {
 });
 
 // Iniciar el servidor Express
-app.listen(3000, () => {
-  console.log('Servidor escuchando en puerto 3000. Abre http://localhost:3000/qr para escanear el código QR.');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en puerto ${PORT}.`);
 });
