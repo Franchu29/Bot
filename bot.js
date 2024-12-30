@@ -5,6 +5,7 @@ const app = express();
 const questionBank = require('./preguntas');
 
 let qrCodeImageUrl = null; // Variable para guardar el QR generado
+let currentQuestionId = null; // Inicializar currentQuestionId
 
 // Crear una instancia del cliente de WhatsApp
 const client = new Client({
