@@ -307,7 +307,7 @@ const questionBank = {
     6: { question: "¿Quiero saber el precio de sus productos?", answer: "Puedes revisar nuestro sitio web: https://arjuegos.cl/." },
     7: { question: "¿Tienen ofertas?", answer: "Revisa nuestras ofertas en el sitio web: https://arjuegos.cl/collections/ofertas." },
     8: { question: "Favor enviar catálogo", answer: "Visita nuestro sitio web para ver el catálogo completo: https://arjuegos.cl/." },
-    9: { question: "¿Cómo puedo contactarlos?", answer: "Puedes contactarnos a través de nuestro formulario de contacto: https://wa.me/983583007" },
+    9: { question: "¿Cómo puedo contactarlos?", answer: "Puedes contactarnos a través de nuestro formulario de contacto: https://wa.me/56983583007" },
   };
 
 module.exports = questionBank;
