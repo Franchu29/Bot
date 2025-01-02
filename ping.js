@@ -1,3 +1,4 @@
+/*
 const axios = require('axios');
 
 // URL del servidor
@@ -19,3 +20,4 @@ module.exports = () => {
   // Ejecutar auto-ping cada 5 minutos
   setInterval(autoPing, 60000);
 };
+*/
