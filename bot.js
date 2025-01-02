@@ -1,27 +1,39 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode'); // Usaremos qrcode para generar la imagen QR
 const express = require('express');
 const app = express();
 const questionBank = require('./preguntas');
+require('./ping')();
+
+let qrCodeImageUrl = null; // Variable para guardar el QR generado
+let currentQuestionId = null; // Inicializar currentQuestionId
 
 // Crear una instancia del cliente de WhatsApp
 const client = new Client({
   authStrategy: new LocalAuth(), // Autenticación local para mantener la sesión
+  puppeteer: {
+    args: ['--no-sandbox', '--disable-setuid-sandbox'], // Desactiva el sandboxing
+  },
 });
 
 // Evento para generar el código QR
 client.on('qr', (qr) => {
-  qrcode.generate(qr, { small: true }); // Genera el QR en la terminal
-  console.log('Escanea el código QR con WhatsApp');
+  // Generar el QR como imagen y guardarlo
+  qrcode.toDataURL(qr, (err, url) => {
+    if (err) {
+      console.error('Error generando el código QR:', err);
+      return;
+    }
+    qrCodeImageUrl = url;
+    console.log('El código QR está disponible en el navegador.');
+  });
 });
 
 // Evento que se activa cuando el cliente está listo
 client.on('ready', () => {
   console.log('Cliente de WhatsApp está listo!');
+  qrCodeImageUrl = null; // Limpiar el QR después de la autenticación
 });
-
-// Variable para rastrear la pregunta actual
-let currentQuestionId = null;
 
 // Evento para manejar los mensajes entrantes
 client.on('message', async (message) => {
@@ -33,13 +45,11 @@ client.on('message', async (message) => {
       const number = parseInt(userMessage, 10);
 
       if (currentQuestionId) {
-        // Subcategorías o sub-subcategorías
         const subquestions = questionBank[currentQuestionId]?.subquestions;
 
         if (number === 0) {
-          // Regresar al menú principal o al nivel anterior
           const parentId = currentQuestionId.split('.').slice(0, -1).join('.');
-          currentQuestionId = parentId || null; // Si no hay nivel anterior, vuelve al menú principal
+          currentQuestionId = parentId || null;
 
           if (!currentQuestionId) {
             const questionsList = getQuestionsList();
@@ -57,7 +67,6 @@ client.on('message', async (message) => {
             const suboptions = getSubquestionsList(nextQuestion?.subquestions);
             return message.reply(`${nextQuestion?.question}\n\n${suboptions}`);
           } else {
-            // Detectar preguntas de sub-subcategorías (3 niveles como 1.1.1)
             if (currentQuestionId.split('.').length === 3) {
               await message.reply('Estamos procesando tu solicitud');
             }
@@ -67,16 +76,14 @@ client.on('message', async (message) => {
           return message.reply("Opción no válida. Selecciona un número válido de la lista o escribe 0 para regresar.");
         }
       } else {
-        // Preguntas generales (nivel principal)
         const question = questionBank[number];
         if (question) {
-          // Detectar preguntas generales específicas (6, 7, 8)
           if ([6, 7, 8, 9].includes(number)) {
             await message.reply('Estamos procesando tu solicitud');
           }
 
           if (question.subquestions) {
-            currentQuestionId = number.toString(); // Actualizamos el nivel actual
+            currentQuestionId = number.toString();
             const suboptions = getSubquestionsList(question.subquestions);
             return message.reply(`${question?.question}\n\n${suboptions}`);
           } else {
@@ -87,7 +94,6 @@ client.on('message', async (message) => {
         }
       }
     } else {
-      // Mensaje no es un número
       const questionsList = getQuestionsList();
       const replyMessage = `Hola buenas, soy un Bot de la Empresa AR Juegos. Estoy aquí para responder alguna de las siguientes preguntas:`;
       return message.reply(`${replyMessage}\n\n${questionsList}`);
@@ -100,7 +106,7 @@ client.on('message', async (message) => {
 // Función para obtener el listado de subpreguntas
 function getSubquestionsList(subquestions) {
   let suboptions = '';
-  if (subquestions) { // Comprobamos que haya subpreguntas
+  if (subquestions) {
     Object.keys(subquestions).forEach((key, index) => {
       suboptions += `${index + 1}. ${subquestions[key]}\n`;
     });
@@ -126,6 +132,25 @@ function getQuestionsList() {
 // Iniciar el cliente de WhatsApp
 client.initialize();
 
+// Ruta para mostrar el QR en una página web
+app.get('/qr', (req, res) => {
+  if (qrCodeImageUrl) {
+    res.send(`
+      <html>
+      <head>
+        <title>Código QR de WhatsApp</title>
+      </head>
+      <body style="text-align: center; font-family: Arial, sans-serif;">
+        <h1>Escanea este Código QR con WhatsApp</h1>
+        <img src="${qrCodeImageUrl}" alt="Código QR" style="width:300px;height:300px;">
+      </body>
+      </html>
+    `);
+  } else {
+    res.send('<h1>No hay un Código QR disponible. Por favor, espera un momento...</h1>');
+  }
+});
+
 // Ruta para obtener preguntas específicas
 app.get('/question/:id', (req, res) => {
   const questionId = req.params.id;
@@ -138,7 +163,19 @@ app.get('/question/:id', (req, res) => {
   }
 });
 
+// Ruta para verificar el estado del servidor con el método HEAD
+app.head('/status', (req, res) => {
+  res.status(200).end(); // Responde con un código HTTP 200 sin cuerpo
+});
+
+// Ruta GET para que puedas probar en el navegador
+app.get('/status', (req, res) => {
+  console.log('Solicitud recibida: ', req.method); // Esto debería mostrar HEAD o GET
+  res.status(200).send('Bot is running');
+});
+
 // Iniciar el servidor Express
-app.listen(3000, () => {
-  console.log('Servidor escuchando en puerto 3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor escuchando en puerto ${PORT}.`);
 });
