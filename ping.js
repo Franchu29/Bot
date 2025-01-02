@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // URL del servidor
-const pingUrl = 'https://translucent-uttermost-paradox.glitch.me/status';
+const pingUrl = 'https://bot-xw2f.onrender.com/status';
 
 function autoPing() {
   axios
