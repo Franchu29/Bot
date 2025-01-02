@@ -1,0 +1,11 @@
+apt update
+ssh-keygen -t rsa -b 4096 -C "correo@de.github" 
+ls ~/.ssh
+cat ~/.ssh/id_rsa.pub
+tmux
+sudo apt install -y libatk1.0-0
+sudo apt install -y libatk-bridge2.0-0
+sudo apt install -y libcups2
+sudo apt install -y libxdamage1
+sudo apt install -y libpango1.0-dev
+sudo apt install -y libasound2
