@@ -3,7 +3,7 @@ const qrcode = require('qrcode'); // Usaremos qrcode para generar la imagen QR
 const express = require('express');
 const app = express();
 const questionBank = require('./preguntas');
-require('./ping')();
+//require('./ping')();
 
 let qrCodeImageUrl = null; // Variable para guardar el QR generado
 let currentQuestionId = null; // Inicializar currentQuestionId
