@@ -174,14 +174,43 @@ app.get('/qr', (req, res) => {
         <body style="text-align: center; font-family: Arial, sans-serif;">
           <h1>Escanea este Código QR con WhatsApp</h1>
           <img src="${qrCodeImageUrl}" alt="Código QR" style="width:300px;height:300px;">
+          <p>Este código QR se actualiza automáticamente si es necesario.</p>
         </body>
+        <script>
+          setTimeout(function() {
+            window.location.reload();
+          }, 1000); // Recarga la página cada 1 segundo
+        </script>
         </html>
       `);
     } else {
-      res.send('<h1>No hay un Código QR disponible. Por favor, espera un momento...</h1>');
+      res.send(`
+        <html>
+        <head>
+          <title>Código QR de WhatsApp</title>
+        </head>
+        <body style="text-align: center; font-family: Arial, sans-serif;">
+          <h1>No hay un Código QR disponible. Por favor, espera un momento...</h1>
+        </body>
+        <script>
+          setTimeout(function() {
+            window.location.reload();
+          }, 5000); // Recarga cada 5 segundos hasta que el QR esté disponible
+        </script>
+        </html>
+      `);
     }
   } else {
-    res.send('<h1>Ya hay una sesión activa. No se necesita un nuevo QR.</h1>');
+    res.send(`
+      <html>
+      <head>
+        <title>Sesión activa</title>
+      </head>
+      <body style="text-align: center; font-family: Arial, sans-serif;">
+        <h1>Ya hay una sesión activa en el cliente de WhatsApp.</h1>
+      </body>
+      </html>
+    `);
   }
 });
 
