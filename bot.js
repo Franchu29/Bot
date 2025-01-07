@@ -209,6 +209,11 @@ app.get('/qr', (req, res) => {
       <body style="text-align: center; font-family: Arial, sans-serif;">
         <h1>Ya hay una sesión activa en el cliente de WhatsApp.</h1>
       </body>
+              <script>
+          setTimeout(function() {
+            window.location.reload();
+          }, 1000); // Recarga cada 1 segundo hasta que el QR esté disponible
+        </script>
       </html>
     `);
   }
