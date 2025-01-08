@@ -243,7 +243,7 @@ app.post('/logout', async (req, res) => {
 });
 
 app.all('/restart-bot', (req, res) => {
-  exec('pm2 restart mi-bot-whatsapp', (error, stdout, stderr) => {
+  exec('pm2 restart bot', (error, stdout, stderr) => {
     if (error) {
       console.error(`Error al reiniciar el bot: ${error.message}`);
       return res.status(500).send('Error al reiniciar el bot.');
