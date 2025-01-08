@@ -3,6 +3,7 @@ const qrcode = require('qrcode');
 const express = require('express');
 const app = express();
 const questionBank = require('./preguntas'); // Banco de preguntas
+const { exec } = require('child_process');
 
 let client = null; // Variable para mantener la instancia del cliente
 let qrCodeImageUrl = null; // Variable para guardar el QR generado
@@ -195,7 +196,7 @@ app.get('/qr', (req, res) => {
         <script>
           setTimeout(function() {
             window.location.reload();
-          }, 5000); // Recarga cada 5 segundos hasta que el QR esté disponible
+          }, 2000); // Recarga cada 2 segundos hasta que el QR esté disponible
         </script>
         </html>
       `);
@@ -239,6 +240,92 @@ app.post('/logout', async (req, res) => {
     console.error('Error al desconectar el cliente:', error);
     res.status(500).send('Error al desconectar el cliente.');
   }
+});
+
+app.all('/restart-bot', (req, res) => {
+  exec('pm2 restart mi-bot-whatsapp', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error al reiniciar el bot: ${error.message}`);
+      return res.status(500).send('Error al reiniciar el bot.');
+    }
+
+    if (stderr) {
+      console.error(`Stderr: ${stderr}`);
+      return res.status(500).send('Error al reiniciar el bot.');
+    }
+
+    console.log(`Bot reiniciado exitosamente: ${stdout}`);
+    res.status(200).send('Bot reiniciado exitosamente.');
+  });
+});
+
+app.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Panel de Administración</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background-color: #f4f4f4;
+        }
+        .container {
+          text-align: center;
+        }
+        button {
+          padding: 10px 20px;
+          font-size: 16px;
+          cursor: pointer;
+          margin: 10px;
+        }
+        button#restart {
+          background-color: #f44336; /* Rojo */
+          color: white;
+        }
+        button#qr {
+          background-color: #4CAF50; /* Verde */
+          color: white;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Panel de Administración</h1>
+        <button id="restart" onclick="reiniciarBot()">Reiniciar Bot</button>
+        <button id="qr" onclick="window.location.href='/qr'">Ver QR</button>
+      </div>
+
+      <script>
+        function reiniciarBot() {
+          // Realizar la solicitud fetch para reiniciar el bot
+          fetch('/restart-bot', {
+            method: 'POST', // o 'GET' según lo que hayas configurado en el backend
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => {
+            if (response.ok) {
+              alert('Bot reiniciado exitosamente.');
+            } else {
+              alert('Error al reiniciar el bot.');
+            }
+          })
+          .catch(error => {
+            alert('Error al realizar la solicitud: ' + error);
+          });
+        }
+      </script>
+    </body>
+    </html>
+  `);
 });
 
 // Iniciar el servidor Express
