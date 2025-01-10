@@ -137,7 +137,7 @@ const initializeClient = () => {
           const questionsList = getQuestionsList();
           const replyMessage = `Hola buenas, soy un Bot de la Empresa AR Juegos. Estoy aquí para responder alguna de las siguientes preguntas:`;
           const messasgeFinal= `En Ar Juegos NO se realizan arriendos.`
-          return message.reply(`${replyMessage}\n\n${questionsList}${messasgeFinal}\n`);
+          return message.reply(`${replyMessage}\n\n${questionsList}\n${messasgeFinal}`);
       }
     } catch (error) {
         console.error('Error al manejar el mensaje:', error);
