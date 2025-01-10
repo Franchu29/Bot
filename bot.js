@@ -116,7 +116,7 @@ const initializeClient = () => {
           } else {
               const question = questionBank[number];
               if (question) {
-                  if ([6, 7, 8, 9].includes(number)) {
+                  if ([5, 6, 7, 8].includes(number)) {
                       await message.reply('Estamos procesando tu solicitud');
                   }
 
@@ -136,7 +136,8 @@ const initializeClient = () => {
           user.currentQuestionId = null; // Reiniciamos el estado del usuario
           const questionsList = getQuestionsList();
           const replyMessage = `Hola buenas, soy un Bot de la Empresa AR Juegos. Estoy aquí para responder alguna de las siguientes preguntas:`;
-          return message.reply(`${replyMessage}\n\n${questionsList}`); 
+          const messasgeFinal= `En Ar Juegos NO se realizan arriendos.`
+          return message.reply(`${replyMessage}\n\n${questionsList}${messasgeFinal}\n`);
       }
     } catch (error) {
         console.error('Error al manejar el mensaje:', error);
@@ -162,7 +163,7 @@ const initializeClient = () => {
     let questionsList = '';
     let count = 0;
     for (const key in questionBank) {
-      if (count >= 9) break; // Limitar a las primeras 8 preguntas
+      if (count >= 8) break; // Limitar a las primeras 8 preguntas
       questionsList += `${count + 1}. ${questionBank[key]?.question}\n`;
       count++;
     }
@@ -174,6 +175,8 @@ const initializeClient = () => {
 
 // Inicializar el cliente por primera vez
 initializeClient();
+
+//Rutas Web de HTML que Renderiza en el Navegador
 
 // Ruta para mostrar el QR en una página web
 app.get('/qr', (req, res) => {
