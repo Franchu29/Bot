@@ -9,9 +9,7 @@ let client = null; // Variable para mantener la instancia del cliente
 let qrCodeImageUrl = null; // Variable para guardar el QR generado
 let isAuthenticated = false; // Indicador para saber si hay una sesión activa
 let currentQuestionId = null; // Inicializar currentQuestionId
-
-let lastQRCodeGenerationTime = 0; // Última vez que se generó un QR
-const QR_GENERATION_INTERVAL = 30 * 60 * 1000; // Intervalo de 30 minutos (en milisegundos)
+const users = {}; // Variable para guardar los usuarios
 
 // Función para inicializar el cliente
 const initializeClient = () => {
@@ -64,71 +62,85 @@ const initializeClient = () => {
   });
 
   // Evento para manejar los mensajes entrantes y las preguntas
-  client.on('message', async (message) => {
+  client.on('message', async message => {
+    const userId = message.from;
+    console.log('Mensaje recibido de:', userId);
+
+    if (!users[userId]) {
+        users[userId] = {
+            currentQuestionId: null, 
+            state: 'inicio' 
+        };
+    }
+
+    const user = users[userId];
+    const userMessage = message.body.trim();
+
     try {
-      const userMessage = message.body.trim();
-
-      // Si el mensaje es un número, procesamos las preguntas
       if (!isNaN(userMessage)) {
-        const number = parseInt(userMessage, 10);
+          const number = parseInt(userMessage, 10);
 
-        if (currentQuestionId) {
-          const subquestions = questionBank[currentQuestionId]?.subquestions;
+          // Lógica para manejar números
+          if (user.currentQuestionId) { 
+              const subquestions = questionBank[user.currentQuestionId]?.subquestions;
 
-          if (number === 0) {
-            const parentId = currentQuestionId.split('.').slice(0, -1).join('.');
-            currentQuestionId = parentId || null;
+              //Compara para ver si el número es 0
+              if (number === 0) {
+                  const parentId = user.currentQuestionId.split('.').slice(0, -1).join('.');
+                  user.currentQuestionId = parentId || null;
 
-            if (!currentQuestionId) {
-              const questionsList = getQuestionsList();
-              return message.reply(`Has regresado al menú principal:\n\n${questionsList}`);
-            } else {
-              const parentQuestion = questionBank[currentQuestionId];
-              const suboptions = getSubquestionsList(parentQuestion?.subquestions);
-              return message.reply(`${parentQuestion?.question}\n\n${suboptions}`);
-            }
-          } else if (subquestions && subquestions[number]) {
-            currentQuestionId = `${currentQuestionId}.${number}`;
-            const nextQuestion = questionBank[currentQuestionId];
+                  if (!user.currentQuestionId) {
+                      const questionsList = getQuestionsList();
+                      return message.reply(`Has regresado al menú principal:\n\n${questionsList}`);
+                  } else {
+                      const parentQuestion = questionBank[user.currentQuestionId];
+                      const suboptions = getSubquestionsList(parentQuestion?.subquestions);
+                      return message.reply(`${parentQuestion?.question}\n\n${suboptions}`);
+                  }
+              } else if (subquestions && subquestions[number]) {
+                  user.currentQuestionId = `${user.currentQuestionId}.${number}`;
+                  const nextQuestion = questionBank[user.currentQuestionId];
 
-            if (nextQuestion?.subquestions) {
-              const suboptions = getSubquestionsList(nextQuestion?.subquestions);
-              return message.reply(`${nextQuestion?.question}\n\n${suboptions}`);
-            } else {
-              if (currentQuestionId.split('.').length === 3) {
-                await message.reply('Estamos procesando tu solicitud');
+                  if (nextQuestion?.subquestions) {
+                      const suboptions = getSubquestionsList(nextQuestion?.subquestions);
+                      return message.reply(`${nextQuestion?.question}\n\n${suboptions}`);
+                  } else {
+                      if (user.currentQuestionId.split('.').length === 3) {
+                          await message.reply('Estamos procesando tu solicitud');
+                      }
+                      return message.reply(nextQuestion?.answer || "Opción no válida.");
+                  }
+              } else {
+                  return message.reply("Opción no válida. Selecciona un número válido de la lista o escribe 0 para regresar.");
               }
-              return message.reply(nextQuestion?.answer || "Opción no válida.");
-            }
           } else {
-            return message.reply("Opción no válida. Selecciona un número válido de la lista o escribe 0 para regresar.");
-          }
-        } else {
-          const question = questionBank[number];
-          if (question) {
-            if ([6, 7, 8, 9].includes(number)) {
-              await message.reply('Estamos procesando tu solicitud');
-            }
+              const question = questionBank[number];
+              if (question) {
+                  if ([6, 7, 8, 9].includes(number)) {
+                      await message.reply('Estamos procesando tu solicitud');
+                  }
 
-            if (question.subquestions) {
-              currentQuestionId = number.toString();
-              const suboptions = getSubquestionsList(question.subquestions);
-              return message.reply(`${question?.question}\n\n${suboptions}`);
-            } else {
-              return message.reply(question?.answer || "Opción no válida.");
-            }
-          } else {
-            return message.reply("Número no válido. Por favor, selecciona una opción del menú principal.");
+                  if (question.subquestions) {
+                      user.currentQuestionId = number.toString();
+                      const suboptions = getSubquestionsList(question.subquestions);
+                      return message.reply(`${question?.question}\n\n${suboptions}`);
+                  } else {
+                      return message.reply(question?.answer || "Opción no válida.");
+                  }
+              } else {
+                  return message.reply("Número no válido. Por favor, selecciona una opción del menú principal.");
+              }
           }
-        }
       } else {
-        const questionsList = getQuestionsList();
-        const replyMessage = `Hola buenas, soy un Bot de la Empresa AR Juegos. Estoy aquí para responder alguna de las siguientes preguntas:`;
-        return message.reply(`${replyMessage}\n\n${questionsList}`);
+          // Si el mensaje no es un número, reiniciar la conversación
+          user.currentQuestionId = null; // Reiniciamos el estado del usuario
+          const questionsList = getQuestionsList();
+          const replyMessage = `Hola buenas, soy un Bot de la Empresa AR Juegos. Estoy aquí para responder alguna de las siguientes preguntas:`;
+          return message.reply(`${replyMessage}\n\n${questionsList}`); 
       }
     } catch (error) {
-      console.error('Error al manejar el mensaje:', error);
-    }
+        console.error('Error al manejar el mensaje:', error);
+    } 
   });
 
   // Función para obtener el listado de subpreguntas
@@ -243,7 +255,7 @@ app.post('/logout', async (req, res) => {
 });
 
 app.all('/restart-bot', (req, res) => {
-  exec('pm2 restart bot', (error, stdout, stderr) => {
+  exec('pm2 restart mi-bot-whatsapp', (error, stdout, stderr) => {
     if (error) {
       console.error(`Error al reiniciar el bot: ${error.message}`);
       return res.status(500).send('Error al reiniciar el bot.');
