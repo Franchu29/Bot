@@ -136,7 +136,7 @@ const initializeClient = () => {
           user.currentQuestionId = null; // Reiniciamos el estado del usuario
           const questionsList = getQuestionsList();
           const replyMessage = `Hola buenas, soy un Bot de la Empresa AR Juegos. Estoy aquí para responder alguna de las siguientes preguntas:`;
-          const messasgeFinal= `En Ar Juegos NO se realizan arriendos.`
+          const messasgeFinal= `En AR juegos nos dedicamos a la venta de juegos, NO tenemos servicio de arriendo.`
           return message.reply(`${replyMessage}\n\n${questionsList}\n${messasgeFinal}`);
       }
     } catch (error) {
