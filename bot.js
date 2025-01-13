@@ -91,7 +91,8 @@ const initializeClient = () => {
 
                   if (!user.currentQuestionId) {
                       const questionsList = getQuestionsList();
-                      return message.reply(`Has regresado al menú principal:\n\n${questionsList}`);
+                      const messasgeFinal= `En AR juegos nos dedicamos a la venta de juegos, NO tenemos servicio de arriendo.`
+                      return message.reply(`Has regresado al menú principal:\n\n${questionsList}\n${messasgeFinal}`);
                   } else {
                       const parentQuestion = questionBank[user.currentQuestionId];
                       const suboptions = getSubquestionsList(parentQuestion?.subquestions);
